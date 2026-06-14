@@ -162,6 +162,7 @@ func createSchema(db *sql.DB) error {
 		email VARCHAR(100) UNIQUE NOT NULL,
 		name VARCHAR(100) NOT NULL,
 		role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'moderator')),
+		picture_url TEXT DEFAULT '',
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);
 	`
@@ -169,6 +170,9 @@ func createSchema(db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("erreur lors de la création de la table users: %w", err)
 	}
+
+	// S'assurer de la présence de la colonne picture_url si la table existait déjà
+	_, _ = db.Exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS picture_url TEXT DEFAULT '';")
 
 	// Création de la table sessions
 	querySessions := `
@@ -830,8 +834,8 @@ func seedDefaultTeamData(db *sql.DB) error {
 // GetUserByEmail récupère un utilisateur par son email
 func GetUserByEmail(db *sql.DB, email string) (*models.User, error) {
 	var u models.User
-	query := `SELECT id, email, name, role, created_at FROM users WHERE email = $1`
-	err := db.QueryRow(query, email).Scan(&u.ID, &u.Email, &u.Name, &u.Role, &u.CreatedAt)
+	query := `SELECT id, email, name, role, COALESCE(picture_url, ''), created_at FROM users WHERE email = $1`
+	err := db.QueryRow(query, email).Scan(&u.ID, &u.Email, &u.Name, &u.Role, &u.PictureURL, &u.CreatedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -841,10 +845,10 @@ func GetUserByEmail(db *sql.DB, email string) (*models.User, error) {
 	return &u, nil
 }
 
-// UpdateUserProfile met à jour le nom d'un utilisateur (appelé lors de sa connexion via Google)
-func UpdateUserProfile(db *sql.DB, email, name string) error {
-	query := `UPDATE users SET name = $1 WHERE email = $2`
-	_, err := db.Exec(query, name, email)
+// UpdateUserProfile met à jour le nom et la photo d'un utilisateur (appelé lors de sa connexion via Google)
+func UpdateUserProfile(db *sql.DB, email, name, pictureURL string) error {
+	query := `UPDATE users SET name = $1, picture_url = $2 WHERE email = $3`
+	_, err := db.Exec(query, name, pictureURL, email)
 	return err
 }
 
@@ -860,12 +864,12 @@ func CreateSession(db *sql.DB, token string, userID int, duration time.Duration)
 func GetSessionUser(db *sql.DB, token string) (*models.User, error) {
 	var u models.User
 	query := `
-		SELECT u.id, u.email, u.name, u.role, u.created_at 
+		SELECT u.id, u.email, u.name, u.role, COALESCE(u.picture_url, ''), u.created_at 
 		FROM users u
 		JOIN sessions s ON s.user_id = u.id
 		WHERE s.token = $1 AND s.expires_at > $2
 	`
-	err := db.QueryRow(query, token, time.Now()).Scan(&u.ID, &u.Email, &u.Name, &u.Role, &u.CreatedAt)
+	err := db.QueryRow(query, token, time.Now()).Scan(&u.ID, &u.Email, &u.Name, &u.Role, &u.PictureURL, &u.CreatedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -884,7 +888,7 @@ func DeleteSession(db *sql.DB, token string) error {
 
 // GetAllUsers récupère la liste de tous les modérateurs et de l'administrateur
 func GetAllUsers(db *sql.DB) ([]models.User, error) {
-	query := `SELECT id, email, name, role, created_at FROM users ORDER BY role ASC, id ASC`
+	query := `SELECT id, email, name, role, COALESCE(picture_url, ''), created_at FROM users ORDER BY role ASC, id ASC`
 	rows, err := db.Query(query)
 	if err != nil {
 		return nil, err
@@ -894,7 +898,7 @@ func GetAllUsers(db *sql.DB) ([]models.User, error) {
 	var users []models.User
 	for rows.Next() {
 		var u models.User
-		if err := rows.Scan(&u.ID, &u.Email, &u.Name, &u.Role, &u.CreatedAt); err != nil {
+		if err := rows.Scan(&u.ID, &u.Email, &u.Name, &u.Role, &u.PictureURL, &u.CreatedAt); err != nil {
 			return nil, err
 		}
 		users = append(users, u)
@@ -905,8 +909,8 @@ func GetAllUsers(db *sql.DB) ([]models.User, error) {
 // InsertUser ajoute un nouveau modérateur
 func InsertUser(db *sql.DB, email, name, role string) error {
 	query := `
-		INSERT INTO users (email, name, role) 
-		VALUES ($1, $2, $3)
+		INSERT INTO users (email, name, role, picture_url) 
+		VALUES ($1, $2, $3, '')
 		ON CONFLICT (email) DO UPDATE SET role = EXCLUDED.role, name = EXCLUDED.name
 	`
 	_, err := db.Exec(query, email, name, role)

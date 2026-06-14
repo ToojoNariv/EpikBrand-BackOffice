@@ -302,10 +302,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const teamGrid = document.getElementById('team-grid');
   const navPortfolio = document.getElementById('nav-portfolio');
   const navEquipe = document.getElementById('nav-equipe');
+  const navUsers = document.getElementById('nav-users');
   const sectionPortfolio = document.getElementById('section-portfolio');
   const sectionEquipe = document.getElementById('section-equipe');
+  const sectionUsers = document.getElementById('section-users');
   const btnOpenForm = document.getElementById('btn-open-form');
   const btnOpenMemberForm = document.getElementById('btn-open-member-form');
+  const btnOpenUserForm = document.getElementById('btn-open-user-form');
+  const userTableBody = document.getElementById('users-table-body');
   const filterTabs = document.querySelectorAll('.filter-tab');
 
   // Dialog de confirmation
@@ -853,14 +857,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // --- NAVIGATION PAR ONGLETS (PORTFOLIO / ÉQUIPE) ---
+  // --- NAVIGATION PAR ONGLETS (PORTFOLIO / ÉQUIPE / MODÉRATEURS) ---
   navPortfolio.addEventListener('click', () => {
     navPortfolio.classList.add('active');
     navEquipe.classList.remove('active');
+    navUsers.classList.remove('active');
+    
     sectionPortfolio.style.display = 'block';
     sectionEquipe.style.display = 'none';
+    sectionUsers.style.display = 'none';
+    
     btnOpenForm.style.display = 'inline-flex';
     btnOpenMemberForm.style.display = 'none';
+    btnOpenUserForm.style.display = 'none';
+    
     currentActiveTab = 'portfolio';
     loadProjects();
   });
@@ -868,10 +878,16 @@ document.addEventListener('DOMContentLoaded', () => {
   navEquipe.addEventListener('click', () => {
     navPortfolio.classList.remove('active');
     navEquipe.classList.add('active');
+    navUsers.classList.remove('active');
+    
     sectionPortfolio.style.display = 'none';
     sectionEquipe.style.display = 'block';
+    sectionUsers.style.display = 'none';
+    
     btnOpenForm.style.display = 'none';
     btnOpenMemberForm.style.display = 'inline-flex';
+    btnOpenUserForm.style.display = 'none';
+    
     currentActiveTab = 'equipe';
     loadTeam();
   });
@@ -886,12 +902,47 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  const fetchMe = async () => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return;
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem('user_email', data.email);
+        localStorage.setItem('user_name', data.name);
+        localStorage.setItem('user_role', data.role);
+        localStorage.setItem('user_picture_url', data.picture_url || '');
+        
+        // Mettre à jour l'affichage en direct
+        document.getElementById('user-display-name').textContent = data.name;
+        document.getElementById('user-display-role').textContent = data.role === 'admin' ? 'Administrateur' : 'Modérateur';
+        const avatarImg = document.getElementById('user-display-avatar');
+        if (avatarImg) {
+          if (data.picture_url) {
+            avatarImg.src = data.picture_url;
+            avatarImg.style.display = 'block';
+          } else {
+            avatarImg.style.display = 'none';
+          }
+        }
+      } else if (res.status === 401) {
+        window.logoutUser();
+      }
+    } catch (e) {
+      console.warn("Impossible de rafraîchir le profil utilisateur :", e);
+    }
+  };
+
   // --- GESTION DES SESSIONS ---
   const checkSession = () => {
     const token = localStorage.getItem('auth_token');
     const email = localStorage.getItem('user_email');
     const name = localStorage.getItem('user_name');
     const role = localStorage.getItem('user_role');
+    const pictureUrl = localStorage.getItem('user_picture_url');
 
     if (token && role) {
       document.getElementById('login-overlay').classList.remove('active');
@@ -899,7 +950,16 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('user-display-name').textContent = name;
       document.getElementById('user-display-role').textContent = role === 'admin' ? 'Administrateur' : 'Modérateur';
       
-      const navUsers = document.getElementById('nav-users');
+      const avatarImg = document.getElementById('user-display-avatar');
+      if (avatarImg) {
+        if (pictureUrl) {
+          avatarImg.src = pictureUrl;
+          avatarImg.style.display = 'block';
+        } else {
+          avatarImg.style.display = 'none';
+        }
+      }
+      
       if (role === 'admin') {
         navUsers.style.display = 'inline-block';
       } else {
@@ -907,10 +967,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       loadProjects();
+      fetchMe();
     } else {
       document.getElementById('login-overlay').classList.add('active');
       document.getElementById('header-profile').style.display = 'none';
-      document.getElementById('nav-users').style.display = 'none';
+      navUsers.style.display = 'none';
       
       // Réinitialisation de la navigation
       sectionPortfolio.style.display = 'block';
@@ -944,6 +1005,7 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.removeItem('user_email');
     localStorage.removeItem('user_name');
     localStorage.removeItem('user_role');
+    localStorage.removeItem('user_picture_url');
     checkSession();
   };
 
@@ -1008,6 +1070,7 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('user_email', data.email);
       localStorage.setItem('user_name', data.name);
       localStorage.setItem('user_role', data.role);
+      localStorage.setItem('user_picture_url', data.picture_url || '');
       
       checkSession();
     } catch (err) {
@@ -1018,15 +1081,11 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // --- GESTION DES MODÉRATEURS (ADMIN SEULEMENT) ---
-  const navUsers = document.getElementById('nav-users');
-  const sectionUsers = document.getElementById('section-users');
-  const btnOpenUserForm = document.getElementById('btn-open-user-form');
-  const userTableBody = document.getElementById('users-table-body');
 
   const loadUsers = async () => {
     userTableBody.innerHTML = `
       <tr>
-        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+        <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
           Chargement des modérateurs...
         </td>
       </tr>
@@ -1038,7 +1097,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(err);
       userTableBody.innerHTML = `
         <tr>
-          <td colspan="5" style="text-align: center; color: var(--color-danger); padding: 2rem;">
+          <td colspan="6" style="text-align: center; color: var(--color-danger); padding: 2rem;">
             Impossible de charger les modérateurs : ${err.message}
           </td>
         </tr>
@@ -1050,7 +1109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!users || users.length === 0) {
       userTableBody.innerHTML = `
         <tr>
-          <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+          <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
             Aucun modérateur enregistré.
           </td>
         </tr>
@@ -1069,18 +1128,29 @@ document.addEventListener('DOMContentLoaded', () => {
       let actionsHTML = '';
       if (u.role === 'moderator') {
         actionsHTML = `
-          <button class="btn-action-outline btn-transfer-admin" data-id="${u.id}" data-name="${u.name}">
-            Transférer Admin
-          </button>
-          <button class="btn-action-outline btn-action-danger-text btn-delete-user" data-id="${u.id}" data-name="${u.name}">
-            Supprimer
-          </button>
+          <div class="user-actions-group">
+            <button class="btn-action-solid btn-transfer-admin" data-id="${u.id}" data-name="${u.name}">
+              Transférer Admin
+            </button>
+            <button class="btn-action-solid btn-delete-user" data-id="${u.id}" data-name="${u.name}">
+              Supprimer
+            </button>
+          </div>
         `;
       } else {
         actionsHTML = `<span style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">Propriétaire</span>`;
       }
 
+      let avatarHTML = '';
+      if (u.picture_url) {
+        avatarHTML = `<img class="user-table-avatar" src="${u.picture_url}" alt="${u.name}" referrerpolicy="no-referrer" />`;
+      } else {
+        const initials = u.name ? u.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '?';
+        avatarHTML = `<div class="user-table-avatar-placeholder">${initials}</div>`;
+      }
+
       tr.innerHTML = `
+        <td>${avatarHTML}</td>
         <td>${u.name} ${isSelf ? ' <span class="user-role-badge">Vous</span>' : ''}</td>
         <td style="font-family: monospace;">${u.email}</td>
         <td>${roleText}</td>

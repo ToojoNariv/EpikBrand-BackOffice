@@ -21,6 +21,7 @@
       </div>
       <!-- Profil Utilisateur Connecté -->
       <div class="header-profile" id="header-profile" style="display: none;">
+        <img id="user-display-avatar" class="user-display-avatar" src="" alt="Avatar" referrerpolicy="no-referrer" style="display: none;">
         <span id="user-display-name" class="user-display-name">...</span>
         <span id="user-display-role" class="user-role-badge">...</span>
         <button class="btn-logout" id="btn-logout" title="Se déconnecter">
@@ -128,6 +129,7 @@
             <table class="users-table">
               <thead>
                 <tr>
+                  <th style="width: 80px;">Photo</th>
                   <th>Nom</th>
                   <th>Email Google</th>
                   <th>Rôle</th>
@@ -429,14 +431,14 @@
         
         <div class="form-group">
           <label for="u-name">Nom complet *</label>
-          <input type="text" id="u-name" name="name" placeholder="ex: Jean Dupont" required>
+          <input type="text" id="u-name" name="name" placeholder="ex: Tsito jean petit" required>
           <span class="error-msg">Nom requis.</span>
         </div>
         
         <div class="form-group">
           <label for="u-email">Adresse Email Google *</label>
           <span class="input-helper">Cet email Google permettra à l'utilisateur de s'authentifier.</span>
-          <input type="email" id="u-email" name="email" placeholder="ex: jean.dupont@gmail.com" required>
+          <input type="email" id="u-email" name="email" placeholder="ex: tsitojeanpetit@gmail.com" required>
           <span class="error-msg">Email Google requis.</span>
         </div>
       </div>

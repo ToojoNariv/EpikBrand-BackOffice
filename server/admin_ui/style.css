@@ -1048,14 +1048,11 @@ body {
 
 .user-role-badge {
   font-family: var(--font-title);
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  background-color: #f1f5f9;
   color: var(--color-accent);
-  padding: 2px 8px;
-  border-radius: 0px;
 }
 
 .btn-logout {
@@ -1069,11 +1066,6 @@ body {
   justify-content: center;
   border-radius: 0px;
   transition: all var(--transition-fast);
-}
-
-.btn-logout:hover {
-  color: var(--color-danger);
-  background-color: #fee2e2;
 }
 
 /* -----------------------------------------------------------------------------
@@ -1147,4 +1139,103 @@ body {
 .btn-action-danger-text:hover {
   background-color: #fee2e2;
   border-color: var(--color-danger);
+}
+
+/* Avatar photos */
+.user-display-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-table-avatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.user-table-avatar-placeholder {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.5rem;
+  font-family: var(--font-title);
+}
+
+/* Card overrides for team members to be narrower and more vertical (portrait) */
+#team-grid {
+  grid-template-columns: 1fr;
+}
+
+#team-grid .project-card {
+  aspect-ratio: 3 / 4; /* Portrait aspect ratio suited for team profile cards */
+}
+
+@media (min-width: 480px) {
+  #team-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  #team-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  #team-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Moderator actions - Button group */
+.user-actions-group {
+  display: inline-flex;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.user-actions-group .btn-action-solid {
+  border: none;
+  padding: 6px 14px;
+  font-family: var(--font-title);
+  font-size: 0.85rem; /* Text size enlarged */
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.user-actions-group .btn-transfer-admin {
+  background-color: #111111; /* Solid black */
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+}
+
+.user-actions-group .btn-transfer-admin:hover {
+  background-color: #000000;
+}
+
+.user-actions-group .btn-delete-user {
+  background-color: #dc2626; /* Solid red */
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border-top-left-radius: 0px;
+  border-bottom-left-radius: 0px;
+}
+
+.user-actions-group .btn-delete-user:hover {
+  background-color: #b91c1c;
 }

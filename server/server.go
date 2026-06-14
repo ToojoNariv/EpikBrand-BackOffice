@@ -32,9 +32,10 @@ func StartServer(cfg *config.Config, database *sql.DB) error {
 	// API de configuration (Public)
 	mux.HandleFunc("/api/config", enableCORS(handleConfig(cfg)))
 
-	// API d'authentification (Public)
+	// API d'authentification (Public/Privée)
 	mux.HandleFunc("/api/auth/google", enableCORS(handleGoogleAuth(cfg, database)))
 	mux.HandleFunc("/api/auth/logout", enableCORS(handleLogout(database)))
+	mux.HandleFunc("/api/auth/me", enableCORS(handleMe(database)))
 
 	// API de gestion d'utilisateurs (Admin uniquement, protégé par token)
 	mux.HandleFunc("/api/users", enableCORS(handleUsers(database)))
@@ -151,6 +152,25 @@ func handleConfig(cfg *config.Config) http.HandlerFunc {
 	}
 }
 
+// handleMe renvoie les informations de l'utilisateur actuellement connecté
+func handleMe(database *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+			return
+		}
+		user, err := authenticateRequest(database, r)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(user)
+	}
+}
+
 // handleGoogleAuth valide l'auth Google et génère une session
 func handleGoogleAuth(cfg *config.Config, database *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -193,17 +213,16 @@ func handleGoogleAuth(cfg *config.Config, database *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// Mettre à jour le profil de l'utilisateur avec son vrai nom Google si c'est la première connexion
-		if user.Name == "Admin Initial" || user.Name == "" {
-			_ = db.UpdateUserProfile(database, info.Email, info.Name)
-			user.Name = info.Name
-		}
+		// Mettre à jour le profil de l'utilisateur avec son vrai nom Google et sa photo de profil
+		_ = db.UpdateUserProfile(database, info.Email, info.Name, info.Picture)
+		user.Name = info.Name
+		user.PictureURL = info.Picture
 
 		// Créer la session pour 7 jours
 		sessionToken := generateSessionToken()
 		err = db.CreateSession(database, sessionToken, user.ID, 7*24*time.Hour)
 		if err != nil {
-			log.Printf("[AUTH] Erreur création session: %v", err)
+			log.Printf("[AUTH] Échec de création de la session: %v", err)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)
 			_ = json.NewEncoder(w).Encode(map[string]string{"error": "Erreur de création de session"})
@@ -212,10 +231,11 @@ func handleGoogleAuth(cfg *config.Config, database *sql.DB) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]interface{}{
-			"token": sessionToken,
-			"email": user.Email,
-			"name":  user.Name,
-			"role":  user.Role,
+			"token":       sessionToken,
+			"email":       user.Email,
+			"name":        user.Name,
+			"role":        user.Role,
+			"picture_url": user.PictureURL,
 		})
 	}
 }

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Epik Brand - Portfolio Manager</title>
+  <link rel="icon" type="image/png" href="/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://accounts.google.com/gsi/client"></script>
+</head>
+<body>
+
+  <!-- HEADER GLOBAL -->
+  <header class="main-header">
+    <div class="header-container">
+      <div class="brand-logo">
+        <img src="/logo.svg" alt="Epik Brand Logo" />
+      </div>
+      <!-- Profil Utilisateur Connecté -->
+      <div class="header-profile" id="header-profile" style="display: none;">
+        <span id="user-display-name" class="user-display-name">...</span>
+        <span id="user-display-role" class="user-role-badge">...</span>
+        <button class="btn-logout" id="btn-logout" title="Se déconnecter">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ÉCRAN DE CONNEXION GOOGLE OVERLAY -->
+  <div id="login-overlay" class="login-overlay active">
+    <div class="login-box">
+      <img src="/logo.svg" alt="Epik Brand Logo" class="login-logo">
+      <h2 class="login-title">Administration</h2>
+      <p class="login-desc">Connectez-vous avec votre compte Google autorisé pour gérer le portfolio et l'équipe.</p>
+      
+      <div class="google-btn-wrapper">
+        <div id="google-signin-btn"></div>
+      </div>
+      
+      <div id="login-error" class="login-error-msg" style="display: none;"></div>
+    </div>
+  </div>
+
+  <!-- TABLEAU DE BORD PRINCIPAL -->
+  <main class="dashboard-main">
+    <!-- ONGLETS DE SECTION ET ACTIONS -->
+    <div class="tabs-header-row">
+      <div class="sub-nav-tabs">
+        <button class="sub-nav-tab active" id="nav-portfolio">Portfolio</button>
+        <button class="sub-nav-tab" id="nav-equipe">Équipe</button>
+        <button class="sub-nav-tab" id="nav-users" style="display: none;">Modérateurs</button>
+      </div>
+      <div class="tabs-actions">
+        <button class="btn btn-primary" id="btn-open-form">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-plus">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Ajouter un Projet
+        </button>
+        <button class="btn btn-primary" id="btn-open-member-form" style="display: none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-plus">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Ajouter un Membre
+        </button>
+        <button class="btn btn-primary" id="btn-open-user-form" style="display: none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-plus">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Ajouter un Modérateur
+        </button>
+      </div>
+    </div>
+
+    <!-- SECTION PORTFOLIO -->
+    <div id="section-portfolio">
+      <!-- FILTRES DE CATÉGORIE -->
+      <section class="filters-section">
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-category="all">Tous</button>
+          <button class="filter-tab" data-category="photo">Photographie</button>
+          <button class="filter-tab" data-category="video">Vidéo</button>
+          <button class="filter-tab" data-category="graphique">Graphique Design</button>
+          <button class="filter-tab" data-category="web">Web</button>
+        </div>
+      </section>
+
+      <!-- GRILLE DES PROJETS -->
+      <section class="projects-section">
+        <div class="projects-grid" id="projects-grid">
+          <div class="loader-container">
+            <div class="loader"></div>
+            <p>Chargement des projets depuis PostgreSQL...</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- SECTION ÉQUIPE -->
+    <div id="section-equipe" style="display: none;">
+      <!-- GRILLE DE L'ÉQUIPE -->
+      <section class="projects-section">
+        <div class="projects-grid" id="team-grid">
+          <div class="loader-container">
+            <div class="loader"></div>
+            <p>Chargement des membres de l'équipe...</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- SECTION UTILISATEURS / MODÉRATEURS (ADMIN SEULEMENT) -->
+    <div id="section-users" style="display: none;">
+      <section class="projects-section">
+        <div class="users-list-container">
+          <div class="table-responsive">
+            <table class="users-table">
+              <thead>
+                <tr>
+                  <th>Nom</th>
+                  <th>Email Google</th>
+                  <th>Rôle</th>
+                  <th>Créé le</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body">
+                <!-- Rempli par JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- FORMULAIRE DE PROJET (DRAWER SLIDE-OVER) -->
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+  <aside class="project-drawer" id="project-drawer">
+    <div class="drawer-header">
+      <h2 class="drawer-title" id="form-title">Nouveau Projet</h2>
+      <button class="btn-close" id="btn-close-form" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <form class="drawer-form" id="project-form" novalidate>
+      <div class="drawer-body">
+        
+        <!-- SECTION : PARAMÈTRES GÉNÉRAUX -->
+        <div class="form-section-title" style="margin-top: 0;">1. Paramètres Généraux</div>
+        
+        <div class="form-group-row">
+          <div class="form-group">
+            <label for="p-category">Catégorie du projet *</label>
+            <select id="p-category" name="category" required>
+              <option value="photo">Photographie</option>
+              <option value="video">Vidéo</option>
+              <option value="graphique">Graphique Design</option>
+              <option value="web">Web</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="p-media-type">Type de média principal *</label>
+            <select id="p-media-type" name="mediaType" required>
+              <option value="image">Image / Gif</option>
+              <option value="video">Vidéo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="p-bg-color">Couleur de fond (Hex) *</label>
+          <div class="color-picker-wrapper">
+            <input type="color" id="p-bg-color-picker" value="#0096E7">
+            <input type="text" id="p-bg-color" name="bgColor" value="#0096E7" placeholder="ex: #0096E7" required>
+          </div>
+          <span class="error-msg">Format hexadécimal invalide.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="p-src">IMAGE/VIDÉO DE COUVERTURE PRINCIPALE (Lien URL) *</label>
+          <span class="input-helper">Ce média s’affiche en premier sur la grille du site (ex: ImageKit, Cloudinary, YouTube...)</span>
+          <input type="text" id="p-src" name="src" placeholder="ex: https://ik.imagekit.io/epik/cover.jpg" required>
+          <span class="error-msg">Ce champ est obligatoire.</span>
+          <!-- Aperçu en direct de l'image de couverture -->
+          <div class="image-preview-box" id="cover-preview-box" style="display: none;">
+            <img id="cover-preview-img" src="" alt="Aperçu couverture" />
+          </div>
+        </div>
+
+        <!-- SECTION : TRADUCTIONS -->
+        <div class="form-section-title">2. Textes & Traductions</div>
+        
+        <!-- Onglets Langues -->
+        <div class="lang-tabs">
+          <button type="button" class="lang-tab active" data-lang="fr">Français</button>
+          <button type="button" class="lang-tab" data-lang="en">Anglais (EN)</button>
+          <button type="button" class="lang-tab" data-lang="mg">Malagasy (MG)</button>
+        </div>
+
+        <!-- Contenu Onglet : Français -->
+        <div class="lang-content active" id="lang-content-fr">
+          <div class="form-group-row">
+            <div class="form-group">
+              <label for="p-title-fr-1">Titre (Partie 1) *</label>
+              <input type="text" id="p-title-fr-1" name="title_fr_part1" placeholder="ex: Atelier chez" required>
+              <span class="error-msg">Requis.</span>
+            </div>
+            <div class="form-group">
+              <label for="p-title-fr-2">Titre (Partie 2 - Optionnel)</label>
+              <input type="text" id="p-title-fr-2" name="title_fr_part2" placeholder="ex: Zina">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="p-desc-fr">Description *</label>
+            <textarea id="p-desc-fr" name="description_fr" rows="3" placeholder="Description en Français..." required></textarea>
+            <span class="error-msg">Requis.</span>
+          </div>
+        </div>
+
+        <!-- Contenu Onglet : Anglais -->
+        <div class="lang-content" id="lang-content-en">
+          <p class="lang-info">Si laissé vide, les textes français seront utilisés comme repli.</p>
+          <div class="form-group-row">
+            <div class="form-group">
+              <label for="p-title-en-1">Title (Part 1)</label>
+              <input type="text" id="p-title-en-1" name="title_en_part1" placeholder="ex: Workshop at">
+            </div>
+            <div class="form-group">
+              <label for="p-title-en-2">Title (Part 2)</label>
+              <input type="text" id="p-title-en-2" name="title_en_part2" placeholder="ex: Zina's">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="p-desc-en">Description</label>
+            <textarea id="p-desc-en" name="description_en" rows="3" placeholder="Description in English..."></textarea>
+          </div>
+        </div>
+
+        <!-- Contenu Onglet : Malagasy -->
+        <div class="lang-content" id="lang-content-mg">
+          <p class="lang-info">Raha avela hisy banga, dia ny teny frantsay no hampiasaina ho solony.</p>
+          <div class="form-group-row">
+            <div class="form-group">
+              <label for="p-title-mg-1">Titre (Fizarana 1)</label>
+              <input type="text" id="p-title-mg-1" name="title_mg_part1" placeholder="ex: Atrikasa any">
+            </div>
+            <div class="form-group">
+              <label for="p-title-mg-2">Titre (Fizarana 2)</label>
+              <input type="text" id="p-title-mg-2" name="title_mg_part2" placeholder="ex: Zina">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="p-desc-mg">Famaritana</label>
+            <textarea id="p-desc-mg" name="description_mg" rows="3" placeholder="Famaritana amin'ny teny malagasy..."></textarea>
+          </div>
+        </div>
+
+        <!-- SECTION : GALERIE -->
+        <div class="form-section-title">3. Galerie du Projet (Médias de la suite du projet)</div>
+        <span class="input-helper" style="margin-top: -0.75rem; margin-bottom: 1rem; display: block;">Images ou vidéos secondaires affichées dans la page détail après clic sur le projet</span>
+        
+        <div class="gallery-form-wrapper">
+          <div class="form-group-row align-end">
+            <div class="form-group basis-30" style="margin-bottom: 0;">
+              <label for="g-type">Type de média</label>
+              <select id="g-type">
+                <option value="image">Image</option>
+                <option value="video">Vidéo</option>
+              </select>
+            </div>
+            <div class="form-group basis-60" style="margin-bottom: 0;">
+              <label for="g-src">Lien du média secondaire</label>
+              <input type="text" id="g-src" placeholder="ex: https://ik.imagekit.io/epik/galerie1.jpg">
+            </div>
+            <button type="button" class="btn btn-secondary" id="btn-add-gallery">Ajouter</button>
+          </div>
+        </div>
+
+        <div class="gallery-list-container" style="margin-top: 1.25rem;">
+          <ul class="gallery-list" id="gallery-list">
+            <!-- Rempli par JS -->
+            <li class="gallery-empty">Aucun média secondaire dans ce projet.</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="drawer-footer">
+        <button type="button" class="btn btn-light" id="btn-cancel-form">Annuler</button>
+        <button type="submit" class="btn btn-primary">Sauvegarder le Projet</button>
+      </div>
+    </form>
+  </aside>
+
+  <!-- FORMULAIRE DE MEMBRE (MODAL CENTRÉ RECTANGULAIRE) -->
+  <div class="drawer-overlay" id="member-drawer-overlay"></div>
+  <aside class="project-drawer" id="member-drawer">
+    <div class="drawer-header">
+      <h2 class="drawer-title" id="member-form-title">Nouveau Membre</h2>
+      <button class="btn-close" id="btn-close-member-form" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <form class="drawer-form" id="member-form" novalidate>
+      <div class="drawer-body">
+        <div class="form-section-title">Paramètres du Membre</div>
+        
+        <div class="form-group-row">
+          <div class="form-group">
+            <label for="m-prenom">Prénom *</label>
+            <input type="text" id="m-prenom" name="prenom" placeholder="ex: Nantenaina" required>
+            <span class="error-msg">Ce champ est obligatoire.</span>
+          </div>
+          <div class="form-group">
+            <label for="m-nom">Nom *</label>
+            <input type="text" id="m-nom" name="nom" placeholder="ex: RANDRIA" required>
+            <span class="error-msg">Ce champ est obligatoire.</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="m-email">Adresse Email *</label>
+          <input type="text" id="m-email" name="email" placeholder="ex: hello@epikbrand.com" required>
+          <span class="error-msg">Ce champ est obligatoire.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="m-photo">Lien de la Photo (ImageKit, Cloudinary...) *</label>
+          <input type="text" id="m-photo" name="photo" placeholder="ex: https://ik.imagekit.io/epik/photo.png" required>
+          <span class="error-msg">Ce champ est obligatoire.</span>
+        </div>
+
+        <div class="form-section-title">Rôles & Traductions</div>
+        
+        <div class="lang-tabs" id="member-lang-tabs">
+          <button type="button" class="lang-tab active" data-lang="fr">Français</button>
+          <button type="button" class="lang-tab" data-lang="en">Anglais (EN)</button>
+          <button type="button" class="lang-tab" data-lang="mg">Malagasy (MG)</button>
+        </div>
+
+        <!-- Onglet Français -->
+        <div class="lang-content active" id="member-lang-content-fr">
+          <div class="form-group">
+            <label for="m-role-fr">Rôle *</label>
+            <input type="text" id="m-role-fr" name="role_fr" placeholder="ex: CEO / Directeur Artistique" required>
+            <span class="error-msg">Requis pour le Français.</span>
+          </div>
+        </div>
+
+        <!-- Onglet Anglais -->
+        <div class="lang-content" id="member-lang-content-en">
+          <p class="lang-info">Si laissé vide, le rôle français sera utilisé comme repli.</p>
+          <div class="form-group">
+            <label for="m-role-en">Role (EN)</label>
+            <input type="text" id="m-role-en" name="role_en" placeholder="ex: CEO / Art Director">
+          </div>
+        </div>
+
+        <!-- Onglet Malgache -->
+        <div class="lang-content" id="member-lang-content-mg">
+          <p class="lang-info">Raha avela hisy banga, dia ny teny frantsay no hampiasaina ho solony.</p>
+          <div class="form-group">
+            <label for="m-role-mg">Role (MG)</label>
+            <input type="text" id="m-role-mg" name="role_mg" placeholder="ex: CEO / Mpitarika ara-kanto">
+          </div>
+        </div>
+
+      </div>
+
+      <div class="drawer-footer">
+        <button type="button" class="btn btn-light" id="btn-cancel-member-form">Annuler</button>
+        <button type="submit" class="btn btn-primary">Sauvegarder le Membre</button>
+      </div>
+    </form>
+  </aside>
+
+  <!-- DIALOGUE DE CONFIRMATION DE SUPPRESSION (MODAL) -->
+  <div class="modal-overlay" id="confirm-modal-overlay"></div>
+  <div class="confirm-modal" id="confirm-modal">
+    <div class="confirm-header">
+      <h3>Confirmer la suppression</h3>
+    </div>
+    <div class="confirm-body">
+      <p>Êtes-vous sûr de vouloir supprimer définitivement cet élément ? Cette action est irréversible.</p>
+    </div>
+    <div class="confirm-footer">
+      <button class="btn btn-light" id="btn-cancel-delete">Annuler</button>
+      <button class="btn btn-danger" id="btn-confirm-delete">Supprimer</button>
+    </div>
+  </div>
+
+  <!-- FORMULAIRE DE MODÉRATEUR (DRAWER SLIDE-OVER) -->
+  <div class="drawer-overlay" id="user-drawer-overlay"></div>
+  <aside class="project-drawer" id="user-drawer">
+    <div class="drawer-header">
+      <h2 class="drawer-title" id="user-form-title">Nouveau Modérateur</h2>
+      <button class="btn-close" id="btn-close-user-form" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <form class="drawer-form" id="user-form" novalidate>
+      <div class="drawer-body">
+        <div class="form-section-title" style="margin-top: 0;">Paramètres d'Accès</div>
+        
+        <div class="form-group">
+          <label for="u-name">Nom complet *</label>
+          <input type="text" id="u-name" name="name" placeholder="ex: Jean Dupont" required>
+          <span class="error-msg">Nom requis.</span>
+        </div>
+        
+        <div class="form-group">
+          <label for="u-email">Adresse Email Google *</label>
+          <span class="input-helper">Cet email Google permettra à l'utilisateur de s'authentifier.</span>
+          <input type="email" id="u-email" name="email" placeholder="ex: jean.dupont@gmail.com" required>
+          <span class="error-msg">Email Google requis.</span>
+        </div>
+      </div>
+
+      <div class="drawer-footer">
+        <button type="button" class="btn btn-light" id="btn-cancel-user-form">Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer le Modérateur</button>
+      </div>
+    </form>
+  </aside>
+
+  <script src="/app.js"></script>
+</body>
+</html>

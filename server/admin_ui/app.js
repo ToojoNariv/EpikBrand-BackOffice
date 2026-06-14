@@ -1130,7 +1130,7 @@ document.addEventListener('DOMContentLoaded', () => {
         actionsHTML = `
           <div class="user-actions-group">
             <button class="btn-action-solid btn-transfer-admin" data-id="${u.id}" data-name="${u.name}">
-              Transférer Admin
+              Nommer admin
             </button>
             <button class="btn-action-solid btn-delete-user" data-id="${u.id}" data-name="${u.name}">
               Supprimer

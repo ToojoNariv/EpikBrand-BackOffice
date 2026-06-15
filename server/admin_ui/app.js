@@ -247,18 +247,12 @@ class GalleryController {
       const li = document.createElement('li');
       li.className = 'gallery-item';
 
-      const previewHTML = (item.type === 'image' && item.src)
-        ? `<img src="${item.src}" class="gallery-item-preview-thumb" alt="Miniature" />`
-        : `<div class="gallery-item-video-thumb">VID</div>`;
+      const mediaHTML = (item.type === 'video' && item.src)
+        ? `<video src="${item.src}" autoplay loop muted playsinline class="gallery-item-media"></video>`
+        : (item.src ? `<img src="${item.src}" class="gallery-item-media" alt="Aperçu" />` : `<div class="gallery-item-placeholder">Pas d'image</div>`);
 
       li.innerHTML = `
-        <div class="gallery-item-details">
-          ${previewHTML}
-          <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-            <span class="gallery-item-type">${item.type}</span>
-            <span class="gallery-item-src" title="${item.src}">${item.src}</span>
-          </div>
-        </div>
+        ${mediaHTML}
         <button type="button" class="btn-remove-gallery" title="Enlever">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="3 6 5 6 21 6"></polyline>

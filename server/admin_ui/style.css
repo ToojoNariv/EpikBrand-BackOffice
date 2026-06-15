@@ -726,76 +726,87 @@ body {
 .gallery-list {
   list-style: none;
   margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.75rem;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 0.5rem;
 }
 
 .gallery-empty {
+  grid-column: 1 / -1;
   font-size: 0.8rem;
   color: var(--text-light);
   text-align: center;
-  padding: 1rem 0;
+  padding: 2rem 0;
   font-style: italic;
 }
 
 .gallery-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: white;
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-color);
-  font-size: 0.8rem;
-}
-
-.gallery-item-details {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
+  position: relative;
+  aspect-ratio: 16 / 11;
+  background-color: #f8fafc;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(15, 23, 42, 0.1);
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 85%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all var(--transition-fast);
 }
 
-.gallery-item-type {
-  font-family: var(--font-title);
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.65rem;
-  padding: 1px 5px;
-  background-color: #f1f5f9;
-  color: var(--text-muted);
-  border-radius: 0px;
+.gallery-item:hover {
+  border-color: var(--color-blue-start);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
-.gallery-item-src {
-  overflow: hidden;
-  text-overflow: ellipsis;
+.gallery-item-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gallery-item-placeholder {
+  font-size: 0.75rem;
   color: var(--text-muted);
+  text-align: center;
+  padding: 0.5rem;
 }
 
 .btn-remove-gallery {
-  background: none;
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background-color: rgba(255, 255, 255, 0.95);
   border: none;
-  color: var(--color-danger);
-  cursor: pointer;
-  padding: 2px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0px;
+  color: var(--color-danger);
+  cursor: pointer;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: all var(--transition-fast);
+  z-index: 5;
+  opacity: 0.9;
 }
 
 .btn-remove-gallery:hover {
-  background-color: #fee2e2;
+  background-color: var(--color-danger);
+  color: white;
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 .btn-remove-gallery svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 /* Form validation states */

@@ -806,6 +806,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Rétablir les textes d'origine
     confirmModal.querySelector('.confirm-header h3').textContent = "Confirmer la suppression";
     confirmModal.querySelector('.confirm-body p').textContent = "Êtes-vous sûr de vouloir supprimer définitivement cet élément ? Cette action est irréversible.";
+    btnConfirmDelete.textContent = "Supprimer";
   };
 
   btnCancelDelete.addEventListener('click', closeDeleteModal);
@@ -1254,8 +1255,10 @@ document.addEventListener('DOMContentLoaded', () => {
       <strong>ATTENTION :</strong> Vous allez transférer le rôle d'administrateur principal à <strong>${name}</strong>.
       <br><br>
       Une fois validé, <strong>vous deviendrez modérateur</strong> et perdrez les droits de gestion des utilisateurs.
-      Vous serez automatiquement déconnecté pour appliquer les nouveaux rôles.
+      Vous serez automatiquement déconnecté pour que le nouveau rôle s'applique.
     `;
+    
+    btnConfirmDelete.textContent = "Transférer";
     
     confirmModalOverlay.classList.add('active');
     confirmModal.classList.add('active');

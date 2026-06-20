@@ -187,6 +187,24 @@ func createSchema(db *sql.DB) error {
 		return fmt.Errorf("erreur lors de la création de la table sessions: %w", err)
 	}
 
+	// Création de la table settings
+	querySettings := `
+	CREATE TABLE IF NOT EXISTS settings (
+		key VARCHAR(50) PRIMARY KEY,
+		value TEXT NOT NULL
+	);
+	`
+	_, err = db.Exec(querySettings)
+	if err != nil {
+		return fmt.Errorf("erreur lors de la création de la table settings: %w", err)
+	}
+
+	// Insérer la configuration par défaut de Looker Studio
+	_, err = db.Exec("INSERT INTO settings (key, value) VALUES ('looker_studio_url', '') ON CONFLICT (key) DO NOTHING;")
+	if err != nil {
+		return fmt.Errorf("erreur lors de l'initialisation du paramètre looker_studio_url: %w", err)
+	}
+
 	log.Println("[DB] Schéma vérifié/créé avec succès.")
 	return nil
 }
@@ -968,5 +986,29 @@ func TransferAdminRole(db *sql.DB, currentAdminID, newAdminID int) error {
 	}
 
 	return tx.Commit()
+}
+
+// GetSetting récupère la valeur d'un paramètre par sa clé
+func GetSetting(db *sql.DB, key string) (string, error) {
+	var value string
+	err := db.QueryRow("SELECT value FROM settings WHERE key = $1", key).Scan(&value)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", nil
+		}
+		return "", err
+	}
+	return value, nil
+}
+
+// UpdateSetting met à jour ou insère un paramètre
+func UpdateSetting(db *sql.DB, key, value string) error {
+	query := `
+		INSERT INTO settings (key, value)
+		VALUES ($1, $2)
+		ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+	`
+	_, err := db.Exec(query, key, value)
+	return err
 }
 

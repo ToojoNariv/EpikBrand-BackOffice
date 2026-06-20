@@ -58,6 +58,7 @@
         <button class="sub-nav-tab active" id="nav-portfolio">Portfolio</button>
         <button class="sub-nav-tab" id="nav-equipe">Équipe</button>
         <button class="sub-nav-tab" id="nav-users" style="display: none;">Modérateurs</button>
+        <button class="sub-nav-tab" id="nav-analytics">Statistiques</button>
       </div>
       <div class="tabs-actions">
         <button class="btn btn-primary" id="btn-open-form">
@@ -144,6 +145,59 @@
           </div>
         </div>
       </section>
+    </div>
+
+    <!-- SECTION STATISTIQUES (ANALYTICS LOOKER STUDIO) -->
+    <div id="section-analytics" style="display: none;">
+      <!-- Message si non configuré -->
+      <div id="analytics-empty-state" class="analytics-empty-state" style="display: none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="empty-icon">
+          <line x1="18" y1="20" x2="18" y2="10"></line>
+          <line x1="12" y1="20" x2="12" y2="4"></line>
+          <line x1="6" y1="20" x2="6" y2="14"></line>
+        </svg>
+        <h3>Aucun rapport configuré</h3>
+        <p>Le tableau de bord Google Analytics n'est pas encore lié à cette interface.</p>
+        <p class="admin-only-text" id="analytics-admin-hint" style="display: none;">En tant qu'administrateur, vous pouvez configurer l'URL d'intégration ci-dessous.</p>
+      </div>
+
+      <!-- Iframe du Rapport Looker Studio -->
+      <div id="analytics-iframe-wrapper" class="analytics-iframe-wrapper" style="display: none; width: 100%; margin-bottom: 2rem;">
+        <iframe
+          id="analytics-iframe"
+          src=""
+          frameborder="0"
+          style="border:0; width: 100%; height: 750px; border-radius: 6px; background: rgba(255, 255, 255, 0.02);"
+          allowfullscreen
+          sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+        ></iframe>
+      </div>
+
+      <!-- Helper de gestion Google pour la version Logiciel Bureau (.exe) -->
+      <div id="analytics-webview-helper" class="analytics-webview-helper" style="display: none; background: rgba(0, 150, 231, 0.05); border: 1px solid var(--color-primary); border-radius: 6px; padding: 1.5rem; margin-bottom: 1.5rem; text-align: center;">
+        <h4 style="margin-bottom: 0.5rem; color: var(--color-primary);">Gestion des données</h4>
+        <p style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-muted);">Connectez-vous à votre compte Google pour modifier ces rapports ou gérer les types de données collectées.</p>
+        <button class="btn btn-primary" id="btn-analytics-google-login" style="margin: 0 auto; display: inline-flex;">Se connecter à Google</button>
+      </div>
+
+      <!-- Formulaire de Configuration (Administrateur uniquement) -->
+      <div id="analytics-config-card" class="analytics-config-card" style="display: none;">
+        <div class="config-card-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="config-icon">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <h4>Configuration de la Liaison Analytics</h4>
+        </div>
+        <form id="analytics-config-form" class="analytics-config-form">
+          <div class="form-group" style="margin-bottom: 1.2rem;">
+            <label for="analytics-url-input">URL d'Intégration Data Studio</label>
+            <span class="input-helper">Collez l'URL d'intégration Data Studio (ex: https://datastudio.google.com/embed/reporting/...)</span>
+            <input type="url" id="analytics-url-input" placeholder="https://datastudio.google.com/embed/reporting/..." required style="width: 100%;">
+          </div>
+          <button type="submit" class="btn btn-primary" id="btn-save-analytics-url">Enregistrer l'URL</button>
+        </form>
+      </div>
     </div>
   </main>
 

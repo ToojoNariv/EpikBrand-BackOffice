@@ -27,16 +27,16 @@ func LoadConfig() (*Config, error) {
 	_ = LoadEnvFile(".env")
 
 	cfg := &Config{
-		DBHost:            getEnv("DB_HOST", "localhost"),
+		DBHost:            getEnv("DB_HOST", "ep-billowing-lake-asiai3x9.c-4.eu-central-1.aws.neon.tech"),
 		DBPort:            getEnv("DB_PORT", "5432"),
-		DBUser:            getEnv("DB_USER", "postgres"),
-		DBPassword:        getEnv("DB_PASSWORD", "postgres"),
-		DBName:            getEnv("DB_NAME", "epikbrandadmin"),
-		DBSSLMode:         getEnv("DB_SSLMODE", "disable"),
+		DBUser:            getEnv("DB_USER", "neondb_owner"),
+		DBPassword:        getEnv("DB_PASSWORD", "npg_Hn0zwp5kdxEI"),
+		DBName:            getEnv("DB_NAME", "neondb"),
+		DBSSLMode:         getEnv("DB_SSLMODE", "require"),
 		ServerPort:        getEnv("PORT", "8080"),
 		RemoteURL:         getEnv("REMOTE_URL", ""),
-		GoogleClientID:    getEnv("GOOGLE_CLIENT_ID", ""),
-		InitialAdminEmail: getEnv("INITIAL_ADMIN_EMAIL", ""),
+		GoogleClientID:    getEnv("GOOGLE_CLIENT_ID", "104869025539-i0kbu0rv4i2ud40jgarsfn5v1o85n3ua.apps.googleusercontent.com"),
+		InitialAdminEmail: getEnv("INITIAL_ADMIN_EMAIL", "tojomanambina@gmail.com"),
 	}
 
 	return cfg, nil

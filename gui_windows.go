@@ -2,6 +2,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -13,6 +14,10 @@ import (
 
 // runInterface lance l'interface graphique (WebView2 ou navigateur de repli)
 func runInterface(url string, waitForever bool) {
+	// Configurer WebView2 pour accepter les cookies tiers (nécessaire pour Google Looker Studio)
+	// On désactive la sécurité web et le pistage, et on usurpe le User-Agent standard d'Edge (en retirant "WebView2") pour contourner les blocages de Google.
+	os.Setenv("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", `--user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edge/120.0.0.0" --disable-web-security --disable-features=TrackingProtection3pcd,ThirdPartyStoragePartitioning`)
+
 	// ── Tentative 1 : Fenêtre native WebView2 (vraie application de bureau) ──
 	w := webview2.NewWithOptions(webview2.WebViewOptions{
 		Debug:     false,
@@ -29,6 +34,38 @@ func runInterface(url string, waitForever bool) {
 	if w != nil {
 		defer w.Destroy()
 		w.SetSize(1100, 750, webview2.HintNone)
+		w.Bind("getBackofficeURL", func() string {
+			return url
+		})
+		w.Init(fmt.Sprintf(`
+			(function() {
+				const checkRedirect = () => {
+					const href = window.location.href;
+					const host = window.location.hostname;
+					if (host === 'lookerstudio.google.com' && !href.includes('/embed/')) {
+						if (href.includes('/navigation') || href.includes('/overview') || href.includes('/u/0/')) {
+							window.getBackofficeURL().then(function(boUrl) {
+								if (boUrl) {
+									window.location.href = boUrl;
+								}
+							}).catch(console.error);
+						}
+					}
+				};
+				checkRedirect();
+				const origPushState = history.pushState;
+				history.pushState = function() {
+					origPushState.apply(this, arguments);
+					checkRedirect();
+				};
+				const origReplaceState = history.replaceState;
+				history.replaceState = function() {
+					origReplaceState.apply(this, arguments);
+					checkRedirect();
+				};
+				window.addEventListener('popstate', checkRedirect);
+			})();
+		`, url))
 		w.Navigate(url)
 		log.Println("[INIT] Fenêtre native WebView2 ouverte avec succès.")
 

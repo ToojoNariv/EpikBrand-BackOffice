@@ -280,6 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const projectApi = new ApiService('/api/projects');
   const teamApi = new ApiService('/api/team');
   const userApi = new ApiService('/api/users');
+  const settingsApi = new ApiService('/api/settings');
 
   // --- VARIABLES D'ÉTAT GLOBALES ---
   let projectsList = [];
@@ -305,6 +306,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnOpenUserForm = document.getElementById('btn-open-user-form');
   const userTableBody = document.getElementById('users-table-body');
   const filterTabs = document.querySelectorAll('.filter-tab');
+
+  // --- ÉLÉMENTS ANALYTICS ---
+  const navAnalytics = document.getElementById('nav-analytics');
+  const sectionAnalytics = document.getElementById('section-analytics');
+  const analyticsEmptyState = document.getElementById('analytics-empty-state');
+  const analyticsAdminHint = document.getElementById('analytics-admin-hint');
+  const analyticsIframeWrapper = document.getElementById('analytics-iframe-wrapper');
+  const analyticsIframe = document.getElementById('analytics-iframe');
+  const analyticsWebviewHelper = document.getElementById('analytics-webview-helper');
+  const btnAnalyticsGoogleLogin = document.getElementById('btn-analytics-google-login');
+  const analyticsConfigCard = document.getElementById('analytics-config-card');
+  const analyticsConfigForm = document.getElementById('analytics-config-form');
+  const analyticsUrlInput = document.getElementById('analytics-url-input');
 
   // Dialog de confirmation
   const confirmModalOverlay = document.getElementById('confirm-modal-overlay');
@@ -857,10 +871,12 @@ document.addEventListener('DOMContentLoaded', () => {
     navPortfolio.classList.add('active');
     navEquipe.classList.remove('active');
     navUsers.classList.remove('active');
+    navAnalytics.classList.remove('active');
     
     sectionPortfolio.style.display = 'block';
     sectionEquipe.style.display = 'none';
     sectionUsers.style.display = 'none';
+    sectionAnalytics.style.display = 'none';
     
     btnOpenForm.style.display = 'inline-flex';
     btnOpenMemberForm.style.display = 'none';
@@ -874,10 +890,12 @@ document.addEventListener('DOMContentLoaded', () => {
     navPortfolio.classList.remove('active');
     navEquipe.classList.add('active');
     navUsers.classList.remove('active');
+    navAnalytics.classList.remove('active');
     
     sectionPortfolio.style.display = 'none';
     sectionEquipe.style.display = 'block';
     sectionUsers.style.display = 'none';
+    sectionAnalytics.style.display = 'none';
     
     btnOpenForm.style.display = 'none';
     btnOpenMemberForm.style.display = 'inline-flex';
@@ -961,21 +979,26 @@ document.addEventListener('DOMContentLoaded', () => {
         navUsers.style.display = 'none';
       }
 
+      navAnalytics.style.display = 'inline-block';
+
       loadProjects();
       fetchMe();
     } else {
       document.getElementById('login-overlay').classList.add('active');
       document.getElementById('header-profile').style.display = 'none';
       navUsers.style.display = 'none';
+      navAnalytics.style.display = 'none';
       
       // Réinitialisation de la navigation
       sectionPortfolio.style.display = 'block';
       sectionEquipe.style.display = 'none';
       sectionUsers.style.display = 'none';
+      sectionAnalytics.style.display = 'none';
       
       navPortfolio.classList.add('active');
       navEquipe.classList.remove('active');
       navUsers.classList.remove('active');
+      navAnalytics.classList.remove('active');
       
       btnOpenForm.style.display = 'inline-flex';
       btnOpenMemberForm.style.display = 'none';
@@ -1172,10 +1195,12 @@ document.addEventListener('DOMContentLoaded', () => {
     navPortfolio.classList.remove('active');
     navEquipe.classList.remove('active');
     navUsers.classList.add('active');
+    navAnalytics.classList.remove('active');
     
     sectionPortfolio.style.display = 'none';
     sectionEquipe.style.display = 'none';
     sectionUsers.style.display = 'block';
+    sectionAnalytics.style.display = 'none';
     
     btnOpenForm.style.display = 'none';
     btnOpenMemberForm.style.display = 'none';
@@ -1183,6 +1208,104 @@ document.addEventListener('DOMContentLoaded', () => {
     
     currentActiveTab = 'users';
     loadUsers();
+  });
+
+  // Navigation onglet Statistiques (Looker Studio)
+  navAnalytics.addEventListener('click', () => {
+    navPortfolio.classList.remove('active');
+    navEquipe.classList.remove('active');
+    navUsers.classList.remove('active');
+    navAnalytics.classList.add('active');
+    
+    sectionPortfolio.style.display = 'none';
+    sectionEquipe.style.display = 'none';
+    sectionUsers.style.display = 'none';
+    sectionAnalytics.style.display = 'block';
+    
+    btnOpenForm.style.display = 'none';
+    btnOpenMemberForm.style.display = 'none';
+    btnOpenUserForm.style.display = 'none';
+    
+    currentActiveTab = 'analytics';
+    loadAnalytics();
+  });
+
+  const loadAnalytics = async () => {
+    analyticsEmptyState.style.display = 'none';
+    analyticsIframeWrapper.style.display = 'none';
+    analyticsIframe.src = '';
+    
+    const isWebView2 = window.chrome && window.chrome.webview;
+    if (isWebView2) {
+      analyticsWebviewHelper.style.display = 'block';
+    } else {
+      analyticsWebviewHelper.style.display = 'none';
+    }
+    
+    const role = localStorage.getItem('user_role');
+    if (role === 'admin') {
+      analyticsConfigCard.style.display = 'block';
+      analyticsAdminHint.style.display = 'block';
+    } else {
+      analyticsConfigCard.style.display = 'none';
+      analyticsAdminHint.style.display = 'none';
+    }
+
+    try {
+      const res = await fetch('/api/settings?key=looker_studio_url');
+      if (!res.ok) throw new Error("Erreur de récupération");
+      const data = await res.json();
+      const url = data.value || '';
+
+      if (url.trim() === '') {
+        analyticsEmptyState.style.display = 'flex';
+      } else {
+        analyticsIframe.src = url;
+        analyticsIframeWrapper.style.display = 'block';
+      }
+
+      if (role === 'admin') {
+        analyticsUrlInput.value = url;
+      }
+    } catch (err) {
+      console.error(err);
+      analyticsEmptyState.style.display = 'flex';
+    }
+  };
+
+  if (btnAnalyticsGoogleLogin) {
+    btnAnalyticsGoogleLogin.addEventListener('click', () => {
+      window.location.href = "https://accounts.google.com/ServiceLogin?continue=https%3A%2F%2Flookerstudio.google.com%2F";
+    });
+  }
+
+  // Enregistrement de la configuration Looker Studio
+  analyticsConfigForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const urlVal = analyticsUrlInput.value.trim();
+    const token = localStorage.getItem('auth_token');
+
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          key: 'looker_studio_url',
+          value: urlVal
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Erreur de configuration");
+      }
+      alert("Configuration de Looker Studio enregistrée avec succès.");
+      loadAnalytics();
+    } catch (err) {
+      alert(`Erreur : ${err.message}`);
+    }
   });
 
   // Drawer Modérateur

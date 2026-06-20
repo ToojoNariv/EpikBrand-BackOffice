@@ -41,6 +41,9 @@ func StartServer(cfg *config.Config, database *sql.DB) error {
 	mux.HandleFunc("/api/users", enableCORS(handleUsers(database)))
 	mux.HandleFunc("/api/users/transfer-admin", enableCORS(handleTransferAdmin(database)))
 
+	// API de configuration des paramètres (Public GET, Admin-only POST)
+	mux.HandleFunc("/api/settings", enableCORS(handleSettings(database)))
+
 	// Servir les fichiers de l'interface d'administration
 	sub, err := fs.Sub(adminUI, "admin_ui")
 	if err != nil {
@@ -578,6 +581,81 @@ func handleTeam(database *sql.DB) http.HandlerFunc {
 				"status":  "success",
 				"message": "Membre supprimé avec succès",
 				"id":      memberID,
+			})
+
+		default:
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	}
+}
+
+// handleSettings gère la lecture et la mise à jour des paramètres système
+func handleSettings(database *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			key := r.URL.Query().Get("key")
+			if key == "" {
+				http.Error(w, "Paramètre key manquant", http.StatusBadRequest)
+				return
+			}
+
+			val, err := db.GetSetting(database, key)
+			if err != nil {
+				log.Printf("[SERVEUR] Erreur récupération du paramètre %s: %v", key, err)
+				http.Error(w, "Erreur interne", http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]string{
+				"key":   key,
+				"value": val,
+			})
+
+		case http.MethodPost:
+			// Protégé par authentification
+			currentUser, err := authenticateRequest(database, r)
+			if err != nil {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+				return
+			}
+
+			// Seul l'administrateur peut modifier les paramètres
+			if currentUser.Role != "admin" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusForbidden)
+				_ = json.NewEncoder(w).Encode(map[string]string{"error": "Accès réservé à l'administrateur"})
+				return
+			}
+
+			var req struct {
+				Key   string `json:"key"`
+				Value string `json:"value"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Key == "" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusBadRequest)
+				_ = json.NewEncoder(w).Encode(map[string]string{"error": "Données de configuration invalides"})
+				return
+			}
+
+			err = db.UpdateSetting(database, req.Key, req.Value)
+			if err != nil {
+				log.Printf("[SERVEUR] Erreur mise à jour du paramètre %s: %v", req.Key, err)
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_ = json.NewEncoder(w).Encode(map[string]string{"error": "Erreur lors de l'enregistrement"})
+				return
+			}
+
+			log.Printf("[SERVEUR] Paramètre '%s' mis à jour par %s.", req.Key, currentUser.Email)
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]string{
+				"status":  "success",
+				"message": "Configuration enregistrée avec succès",
 			})
 
 		default:

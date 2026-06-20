@@ -1244,3 +1244,105 @@ body {
 .user-actions-group .btn-delete-user:hover {
   background-color: #b91c1c;
 }
+
+/* -----------------------------------------------------------------------------
+ * GOOGLE ANALYTICS & LOOKER STUDIO
+ * -------------------------------------------------------------------------- */
+.analytics-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  background-color: var(--bg-card);
+  border: 1px dashed var(--border-color);
+  border-radius: 0px;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.analytics-empty-state .empty-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--text-muted);
+  margin-bottom: 1.2rem;
+}
+
+.analytics-empty-state h3 {
+  font-family: var(--font-title);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+}
+
+.analytics-empty-state p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  max-width: 420px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.analytics-empty-state .admin-only-text {
+  font-size: 0.82rem;
+  color: var(--color-blue-start);
+  margin-top: 0.75rem;
+  font-weight: 500;
+}
+
+.analytics-iframe-wrapper {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 6px;
+  border-radius: 0px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.analytics-config-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+}
+
+.config-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.2rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+}
+
+.config-card-header .config-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
+}
+
+.config-card-header h4 {
+  font-family: var(--font-title);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.analytics-config-form input[type="url"] {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  border: none;
+  border-bottom: 1px solid var(--border-color);
+  background-color: transparent;
+  color: var(--text-main);
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.analytics-config-form input[type="url"]:focus {
+  border-bottom-color: var(--color-blue-start);
+}
